@@ -1,0 +1,1017 @@
+schema_version: 1.0.0
+name: SE_Workflow
+id: 7584719393977860150
+description: "通过检索软件工程领域知识库，回答软件工程问题。"
+mode: chatflow
+icon: plugin_icon/chatflow-icon.png
+nodes:
+    - id: "900001"
+      type: end
+      title: 结束
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-End-v2.jpg
+      description: "工作流的最终节点，用于返回工作流运行后的结果信息"
+      position:
+        x: 3682.8287717813373
+        y: 352.8334799923226
+      parameters:
+        content:
+            type: string
+            value:
+                content: '{{output}}'
+                type: literal
+        node_inputs:
+            - name: output
+              input:
+                type: string
+                value:
+                    path: output
+                    ref_node: "178607"
+        streamingOutput: true
+        terminatePlan: useAnswerContent
+    - id: "178607"
+      type: llm
+      title: 证据仲裁与有效信息提炼
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-LLM-v2.jpg
+      description: "调用大语言模型,使用变量和提示词生成回复"
+      version: "3"
+      position:
+        x: 841.9970946592609
+        y: 69.29703290863199
+      parameters:
+        fcParam:
+            knowledgeFCParam:
+                global_setting:
+                    auto: false
+                    min_score: 0.5
+                    no_recall_reply_customize_prompt: 抱歉，您的问题超出了我的知识范围，并且无法在当前阶段回答
+                    no_recall_reply_mode: 0
+                    search_mode: 0
+                    show_source: false
+                    show_source_mode: 0
+                    top_k: 3
+                    use_nl2_sql: true
+                    use_rerank: true
+                    use_rewrite: true
+                knowledgeList:
+                    - id: "7584376227693395977"
+                      knowledgeType: 0
+                      name: SE Papers
+                      volcano_dataset_service_info:
+                        id: ""
+                        name: ""
+            llmNodeUID: ""
+            spaceID: "7563214069479260194"
+            workflowVersion: ""
+        fcParamVar:
+            knowledgeFCParam:
+                knowledgeList: []
+        llmParam:
+            - name: temperature
+              input:
+                type: float
+                value: "0.8"
+            - name: maxTokens
+              input:
+                type: integer
+                value: "1024"
+            - name: spCurrentTime
+              input:
+                type: boolean
+                value: false
+            - name: spAntiLeak
+              input:
+                type: boolean
+                value: false
+            - name: prefixCache
+              input:
+                type: boolean
+                value: false
+            - name: responseFormat
+              input:
+                type: integer
+                value: "2"
+            - name: modelName
+              input:
+                type: string
+                value: DeepSeek-V3-0324
+            - name: modelType
+              input:
+                type: integer
+                value: "1742989917"
+            - name: generationDiversity
+              input:
+                type: string
+                value: balance
+            - name: parameters
+              input:
+                type: object
+                value: null
+            - name: prompt
+              input:
+                type: string
+                value: ""
+            - name: enableChatHistory
+              input:
+                type: boolean
+                value: true
+            - name: chatHistoryRound
+              input:
+                type: integer
+                value: "3"
+            - name: systemPrompt
+              input:
+                type: string
+                value: "# SE_Workflow 角色与任务\n你是 SE_Workflow，软件工程领域的智能检索&深度回答助手。你的核心职责是**基于软件工程领域权威学术资源，精准检索、筛选并整合最相关的知识证据**，为用户的软件工程问题提供结构化的学术支持。\n\n\n## 任务目标\n1. **问题理解**：准确复写并关联用户问题至软件工程核心场景（如流程建模、RAG技术、项目管理等）。  \n2. **权威资源检索**：仅使用软件工程领域的经典学术论文、权威教材、行业标准或领域知识库，避免依赖通用中文网络资源。  \n3. **高价值信息筛选**：从候选知识中筛选**高相关性+高学术可信度**的内容，排除冗余/低质量描述。  \n4. **结构化输出**：以可复用格式呈现核心信息，直接供下游生成最终回答。\n\n## 用户输入\n\n### 用户源输入\n\n{{input}}\n\n### 用户输入扩写\n\n{{rewrite}}\n\n## 候选证据来源\n\n以下信息来源可信度、适用性不同，请谨慎判断：\n\n【来源 A：长期记忆检索结果】\n\n{{knowledge1}}\n\n【来源 B：论文库检索结果 1】\n\n{{knowledge2}}\n\n【来源 C：论文库检索结果 2】\n\n{{knowledge3}}\n\n【来源 D：Web 搜索结果】\n\n{{webSearch}}\n\n## 关键流程与原则\n\n### 1. 信息筛选标准（学术资源三优先一排除）\n- **学术价值优先**：仅保留直接回答软件工程问题的内容，且必须属于领域经典知识体系。  \n- **可信度分级**：优先选择领域经典论文（如IEEE Transactions on Software Engineering期刊） > 权威教材（如《软件工程：实践者的研究方法》） > 行业标准规范（如ISO/IEC 12207）。  \n- **信息密度**：优先提取可复述的概念定义、流程步骤、应用案例（如敏捷开发仪式清单、UML活动图规范等）。  \n- **必须排除**：空泛描述（如“软件工程是重要学科”）、非学术性营销内容、超出领域知识边界的拓展信息。\n\n\n### 2. 证据处理步骤\n- **步骤1（问题定位）**：复写用户问题，明确问题类型（如定义解释、技术选型、流程优化等）。  \n- **步骤2（证据候选）**：从领域学术资源库中筛选匹配的候选知识（含经典论文摘要、教材章节、行业标准等）。 \n- **步骤3（交叉验证）**：同一知识点需验证至少2种权威来源的一致性，排除矛盾/过时内容。  \n- **步骤4（结构化提取）**：按「信息类型+核心内容+来源标注」格式输出，来源标注领域经典文献或标准文档（如：《IEEE软件工程标准术语集》第X章）。\n\n\n## 限制条件\n- ❌ 不得生成最终答案，需明确标注信息完整性（如：“证据足够回答问题”或“缺少XX权威文献支持”）。  \n- ❌ 禁止编造学术资源内容，所有信息必须可追溯至领域经典论文、教材或标准规范。  \n- ❌ 输出内容需严格使用学术化语言，避免口语化或非学术表述。  \n"
+            - name: stableSystemPrompt
+              input:
+                type: string
+                value: ""
+            - name: canContinue
+              input:
+                type: boolean
+                value: false
+            - name: loopPromptVersion
+              input:
+                type: string
+                value: ""
+            - name: loopPromptName
+              input:
+                type: string
+                value: ""
+            - name: loopPromptId
+              input:
+                type: string
+                value: ""
+        node_inputs:
+            - name: input
+              input:
+                type: string
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+            - name: knowledge1
+              input:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        date:
+                            type: string
+                            value: null
+                        output:
+                            type: string
+                            value: null
+                    value: null
+                value:
+                    path: outputList
+                    ref_node: "152619"
+            - name: knowledge2
+              input:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        documentId:
+                            type: string
+                            value: null
+                        output:
+                            type: string
+                            value: null
+                    value: null
+                value:
+                    path: outputList
+                    ref_node: "1603596"
+            - name: knowledge3
+              input:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        documentId:
+                            type: string
+                            value: null
+                        output:
+                            type: string
+                            value: null
+                    value: null
+                value:
+                    path: outputList
+                    ref_node: "1643883"
+            - name: rewrite
+              input:
+                type: string
+                value:
+                    path: output
+                    ref_node: "1630310"
+            - name: webSearch
+              input:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        has_image:
+                            type: boolean
+                            value: null
+                        image_url:
+                            type: string
+                            value: null
+                        logo_url:
+                            type: string
+                            value: null
+                        sitename:
+                            type: string
+                            value: null
+                        summary:
+                            type: string
+                            value: null
+                        title:
+                            type: string
+                            value: null
+                        url:
+                            type: string
+                            value: null
+                    value: null
+                value:
+                    path: data
+                    ref_node: "1447333"
+        node_outputs:
+            output:
+                type: string
+                value: null
+        settingOnError:
+            processType: 1
+            retryTimes: 0
+            switch: false
+            timeoutMs: 600000
+    - id: "1603596"
+      type: knowledge
+      title: 混合检索重排_输入重写
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg
+      description: "在选定的知识中,根据输入变量召回最匹配的信息,并以列表形式返回"
+      position:
+        x: 284
+        y: -3.0943090652966134
+      parameters:
+        datasetParam:
+            - name: datasetList
+              input:
+                type: list
+                items:
+                    type: string
+                    value: null
+                value:
+                    - "7584376227693395977"
+            - name: topK
+              input:
+                type: integer
+                value: "5"
+            - name: useRerank
+              input:
+                type: boolean
+                value: true
+            - name: useRewrite
+              input:
+                type: boolean
+                value: true
+            - name: isPersonalOnly
+              input:
+                type: boolean
+                value: true
+            - name: datasetType
+              input:
+                type: integer
+                value: "0"
+            - name: VolcanoInfoList
+              input:
+                type: list
+                items:
+                    type: object
+                    value: null
+                value: []
+            - name: minScore
+              input:
+                type: float
+                value: "0.5"
+            - name: strategy
+              input:
+                type: integer
+                value: "1"
+        node_inputs:
+            - name: Query
+              input:
+                type: string
+                value:
+                    path: output
+                    ref_node: "1630310"
+            - name: enableChatHistory
+              input:
+                type: boolean
+                value: true
+            - name: chatHistoryRound
+              input:
+                type: float
+                value: 3
+        node_outputs:
+            outputList:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        documentId:
+                            type: string
+                            value: null
+                        output:
+                            type: string
+                            value: null
+                    value: null
+                value: null
+    - id: "100001"
+      type: start
+      title: 开始
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Start-v2.jpg
+      description: "工作流的起始节点，用于设定启动工作流需要的信息"
+      position:
+        x: -690.3530123818898
+        y: 108.29703290863199
+      parameters:
+        node_outputs:
+            CONVERSATION_NAME:
+                type: string
+                value: null
+                default_value: Default
+                description: 本次请求绑定的会话，会自动写入消息、会从该会话读对话历史。
+            USER_INPUT:
+                type: string
+                value: null
+    - id: "1630310"
+      type: llm
+      title: 语义理解与输入重写
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-LLM-v2.jpg
+      description: "调用大语言模型,使用变量和提示词生成回复"
+      version: "3"
+      position:
+        x: -213.21893319750575
+        y: 69.297032908632
+      parameters:
+        fcParam:
+            knowledgeFCParam:
+                global_setting:
+                    auto: false
+                    min_score: 0.5
+                    no_recall_reply_customize_prompt: 抱歉，您的问题超出了我的知识范围，并且无法在当前阶段回答
+                    no_recall_reply_mode: 0
+                    search_mode: 0
+                    show_source: false
+                    show_source_mode: 0
+                    top_k: 3
+                    use_nl2_sql: true
+                    use_rerank: true
+                    use_rewrite: true
+                knowledgeList:
+                    - id: "7584376227693395977"
+                      knowledgeType: 0
+                      name: SE Papers
+                      volcano_dataset_service_info:
+                        id: ""
+                        name: ""
+            llmNodeUID: ""
+            spaceID: "7563214069479260194"
+            workflowVersion: ""
+        fcParamVar:
+            knowledgeFCParam:
+                knowledgeList: []
+        llmParam:
+            - name: temperature
+              input:
+                type: float
+                value: "0.8"
+            - name: maxTokens
+              input:
+                type: integer
+                value: "1024"
+            - name: spCurrentTime
+              input:
+                type: boolean
+                value: false
+            - name: spAntiLeak
+              input:
+                type: boolean
+                value: false
+            - name: prefixCache
+              input:
+                type: boolean
+                value: false
+            - name: responseFormat
+              input:
+                type: integer
+                value: "2"
+            - name: modelName
+              input:
+                type: string
+                value: DeepSeek-V3-0324
+            - name: modelType
+              input:
+                type: integer
+                value: "1742989917"
+            - name: generationDiversity
+              input:
+                type: string
+                value: balance
+            - name: parameters
+              input:
+                type: object
+                value: null
+            - name: prompt
+              input:
+                type: string
+                value: '{{input}}'
+            - name: enableChatHistory
+              input:
+                type: boolean
+                value: true
+            - name: chatHistoryRound
+              input:
+                type: integer
+                value: "3"
+            - name: systemPrompt
+              input:
+                type: string
+                value: "# 角色\n你是SE_Workflow，一个专注于软件工程领域的论文知识扩写重写助手。你能基于软件工程学术论文中的理论、研究成果和技术实践，对用户输入的文本内容进行深度、结构化的扩写与重写，以提升文本的专业性和信息量。\n\n## 技能\n### 技能1：精准理解用户输入\n- 接收用户输入的文本（问题、概念描述、需求文档片段等），明确其核心主题、技术领域及扩写重写目标（如补充细节、结构化呈现、增强理论支撑）。\n- 若用户输入存在歧义（如专业术语不明确），需先以问题澄清用户意图。\n\n### 技能2：检索软件工程论文知识\n- 根据用户输入主题，调用知识库检索相关学术论文、研究报告或技术规范（如IEEE Xplore、ACM Digital Library等权威资源）。\n- 检索范围覆盖经典理论（设计模式、敏捷开发）、前沿技术（AI辅助软件工程、DevOps实践）、案例研究等维度，确保信息学术性与时效性。\n\n### 技能3：深度扩写与结构化重写\n- **内容扩充**：基于检索到的论文知识，补充理论背景（定义/公式/研究结论）、技术细节（算法复杂度/实施步骤）、实践案例（企业应用效果）等。\n- **结构优化**：按文本类型（概念解释/问题分析/需求描述）调整逻辑框架，使用专业术语与清晰分层呈现，必要时增加图表化描述或步骤拆解。\n- **引用规范**：对引用内容，使用 `[论文标题](来源链接)` 格式标注来源（如《敏捷软件开发宣言》[2001, Kent Beck]），确保可追溯。\n\n===回复示例===\n用户输入：“介绍软件工程中的单元测试”\nSE_Workflow输出：\n**单元测试概述**  \n单元测试是软件工程中验证最小可测试单元（如函数、方法）正确性的实践，核心目标是隔离检测代码缺陷[1]。其理论基础源于《测试驱动开发：可测试性的科学》[Martin Fowler, 2004]，强调「先写测试，再写代码」的开发范式。  \n\n### 1. 核心理论与方法\n- **隔离原则**：通过Mock/Stub对象模拟外部依赖（如数据库、API调用），确保测试专注于单元自身逻辑。例如xUnit框架（《xUnit Test Patterns》[Gerard Meszaros, 2007]）提供断言库与测试套件管理能力。\n- **测试覆盖率**：IEEE 1001标准建议核心函数覆盖率≥80%，非核心模块≥50%，需结合代码逻辑复杂度动态调整[2]。\n\n### 2. 经典论文研究结论\n- 《Contribution of Unit Testing to Software Quality》[Stroustrup, 2018]研究表明，高覆盖率项目的缺陷密度降低47%，且回归测试效率提升62%。\n- 《Practicality of Test-Driven Development in Enterprise》[Cohn, 2020]指出，TDD需配合「持续集成」（CI）工具链（如Jenkins+JUnit插件）才能最大化收益。\n\n### 引用来源\n[1] 《软件工程：实践者的研究方法》[Roger S. Pressman, 2018]，10.1节  \n[2] 《IEEE Standard for Software Test Documentation》[IEEE Std 829-2008]，第3.2.3条款  \n\n===示例结束===\n\n## 限制\n- 仅处理软件工程领域的文本扩写重写，拒绝非学术方向问题。\n- 内容必须基于检索到的论文知识，不得编造论文观点/结论，信息不足时需明确说明并建议补充方向。\n- 输出需包含「论点+引用来源+结构化信息」，不可使用无关表述或偏离论文知识的内容。\n- 对代码片段、需求文档等，需聚焦技术背景/设计逻辑扩写，必要时标注关键函数的论文参考文献。"
+            - name: stableSystemPrompt
+              input:
+                type: string
+                value: ""
+            - name: canContinue
+              input:
+                type: boolean
+                value: false
+            - name: loopPromptVersion
+              input:
+                type: string
+                value: ""
+            - name: loopPromptName
+              input:
+                type: string
+                value: ""
+            - name: loopPromptId
+              input:
+                type: string
+                value: ""
+        node_inputs:
+            - name: input
+              input:
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+        node_outputs:
+            output:
+                type: string
+                value: null
+        settingOnError:
+            processType: 1
+            retryTimes: 0
+            switch: false
+            timeoutMs: 600000
+    - id: "138401"
+      type: llm
+      title: 回答用户问题
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-LLM-v2.jpg
+      description: "调用大语言模型,使用变量和提示词生成回复"
+      version: "3"
+      position:
+        x: 1559.1965568304818
+        y: 326.8334799923226
+      parameters:
+        fcParam:
+            knowledgeFCParam:
+                global_setting:
+                    auto: false
+                    min_score: 0.5
+                    no_recall_reply_customize_prompt: 抱歉，您的问题超出了我的知识范围，并且无法在当前阶段回答
+                    no_recall_reply_mode: 0
+                    search_mode: 0
+                    show_source: false
+                    show_source_mode: 0
+                    top_k: 3
+                    use_nl2_sql: true
+                    use_rerank: true
+                    use_rewrite: true
+                knowledgeList:
+                    - id: "7584376227693395977"
+                      knowledgeType: 0
+                      name: SE Papers
+                      volcano_dataset_service_info:
+                        id: ""
+                        name: ""
+            llmNodeUID: ""
+            spaceID: "7563214069479260194"
+            workflowVersion: ""
+        fcParamVar:
+            knowledgeFCParam:
+                knowledgeList: []
+        llmParam:
+            - name: temperature
+              input:
+                type: float
+                value: "0.8"
+            - name: maxTokens
+              input:
+                type: integer
+                value: "1024"
+            - name: spCurrentTime
+              input:
+                type: boolean
+                value: false
+            - name: spAntiLeak
+              input:
+                type: boolean
+                value: false
+            - name: prefixCache
+              input:
+                type: boolean
+                value: false
+            - name: responseFormat
+              input:
+                type: integer
+                value: "2"
+            - name: modelName
+              input:
+                type: string
+                value: DeepSeek-V3-0324
+            - name: modelType
+              input:
+                type: integer
+                value: "1742989917"
+            - name: generationDiversity
+              input:
+                type: string
+                value: balance
+            - name: parameters
+              input:
+                type: object
+                value: null
+            - name: prompt
+              input:
+                type: string
+                value: |-
+                    用户原问题：{{input}}
+                    用户问题扩写：{{rewrite}}
+                    信息源：{{info}}
+            - name: enableChatHistory
+              input:
+                type: boolean
+                value: false
+            - name: chatHistoryRound
+              input:
+                type: integer
+                value: "3"
+            - name: systemPrompt
+              input:
+                type: string
+                value: "# 角色  \n你是南大软件学院SE流程智能体，专注于软件工程领域的专业问答与知识整合，以论文知识库为核心支撑，为用户提供基于学术共识与工程实践的问题解答，辅助软件工程全流程（需求分析、设计、开发、测试、部署等）的理论与实践指导。\n\n\n## 技能  \n### 技能1：检索与定位论文核心知识  \n- **操作步骤**：  \n  1. 接收问题后，优先从知识库中检索与问题强相关的论文（如“软件测试覆盖率”问题，定位“代码覆盖率模型”相关论文）；  \n  2. 筛选引用频次高、核心观点明确的论文，提取直接支持问题的结论/方法。  \n- **回复逻辑**：  \n  优先呈现论文核心观点，并标注来源（作者、年份），确保结论有明确学术依据；若问题涉及多维度（如“微服务架构优缺点”），需覆盖不同立场的代表性论文。  \n- **回复格式示例**：  \n  - \U0001F50D 核心结论（引用）：<论文核心观点，来源：[Smith, 2023]>  \n  - \U0001F4CC 补充说明：<若有其他关键论文支持，简要补充>  \n\n\n### 技能2：归纳区分论文结论与方法差异  \n- **操作步骤**：  \n  1. 针对存在分歧或多方法的问题（如“不同敏捷框架效率对比”），从知识库中筛选3-5篇代表性论文；  \n  2. 按“共识”“分歧点”“方法适用前提”分类整理，对比不同方法的优劣（如“Scrum适合中小型团队，Kanban更灵活”）。  \n- **回复逻辑**：  \n  客观呈现差异，明确标注结论支持/反对的论文来源，避免主观判断；若某方法无明确结论，需说明“当前论文未形成一致结论”。  \n- **回复格式示例**：  \n  - \U0001F504 方法对比：  \n    - \U0001F539 共识：<如“迭代开发可提升需求响应速度”>  \n    - \U0001F538 分歧点：<如“方法A认为‘2周迭代周期最优’，方法B认为‘需根据需求复杂度动态调整’”>  \n    - \U0001F4CA 适用场景：<方法A：<场景X>；方法B：<场景Y>>  \n\n\n### 技能3：转化论文知识为工程化应用建议  \n- **操作步骤**：  \n  1. 结合问题所属的软件工程流程（如“需求分析”“单元测试”），从知识库中提取可落地的方法（如“用例驱动开发”）；  \n  2. 关联论文中的关键参数/模型（如“需求变更频率阈值”），给出具体工具/步骤建议（如“推荐使用JIRA管理需求，按[作者, 2022]的‘变更影响评估矩阵’执行”）。  \n- **回复逻辑**：  \n  优先推荐被验证有效的实践，说明适用的项目规模/团队类型，指出潜在风险（如“高并发场景下需补充熔断机制”）。  \n- **回复格式示例**：  \n  - \U0001F527 SE流程应用建议：  \n    - 流程节点：<如“开发阶段”>  \n    - 推荐方法：[作者, 2021]，核心工具：<IDE/框架名称>  \n    - 落地步骤：<1. 执行代码审查；2. 按[模型参数]调整测试用例>  \n\n\n### 技能4：明确知识边界与局限性  \n- **操作步骤**：  \n  1. 若问题超出知识库覆盖范围（如“量子计算在软件工程中的应用”），或论文未给出明确结论，需检查知识库内容；  \n  2. 若确认无法回答，需说明原因（“当前论文未涉及该领域”），并建议补充问题范围或提供替代方向（如“可参考[相关论文]的跨学科研究”）。  \n- **回复逻辑**：  \n  不编造信息，仅基于现有论文知识回答；若有部分相关但不直接的论文，简要连接后明确转向说明。  \n\n\n## 限制  \n- **知识来源**：仅基于预设的软件工程论文知识库内容回答，禁止编造论文结论或事实；  \n- **问题范围**：聚焦软件工程领域（含理论、方法、工具、流程等），拒绝回答与SE无关的问题；  \n- **表达规范**：使用学术中性语言，保留关键英文术语（如“CI/CD”“Code Review”），避免口语化表达；  \n- **结构要求**：回复需分点/标注来源，优先呈现核心结论，字数控制在200字内（复杂问题可适当扩展）；  \n- **边界说明**：明确告知“无法回答的问题”及原因，不模糊处理。"
+            - name: stableSystemPrompt
+              input:
+                type: string
+                value: ""
+            - name: canContinue
+              input:
+                type: boolean
+                value: false
+            - name: loopPromptVersion
+              input:
+                type: string
+                value: ""
+            - name: loopPromptName
+              input:
+                type: string
+                value: ""
+            - name: loopPromptId
+              input:
+                type: string
+                value: ""
+        node_inputs:
+            - name: input
+              input:
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+            - name: info
+              input:
+                value:
+                    path: output
+                    ref_node: "178607"
+            - name: rewrite
+              input:
+                value:
+                    path: output
+                    ref_node: "1630310"
+        node_outputs:
+            output:
+                type: string
+                value: null
+        settingOnError:
+            processType: 1
+            retryTimes: 0
+            switch: false
+            timeoutMs: 180000
+    - id: "183096"
+      type: message_create
+      title: 创建用户消息
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-创建消息.jpg
+      description: "用于创建消息"
+      position:
+        x: -224.3708931035011
+        y: 590.3823335549228
+      parameters:
+        node_inputs:
+            - name: conversationName
+              input:
+                value:
+                    path: CONVERSATION_NAME
+                    ref_node: "100001"
+            - name: role
+              input:
+                type: string
+                value: "user"
+            - name: content
+              input:
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+        node_outputs:
+            isSuccess:
+                type: boolean
+                value: null
+            message:
+                type: object
+                properties:
+                    content:
+                        type: string
+                        value: null
+                    contentType:
+                        type: string
+                        value: null
+                    messageId:
+                        type: string
+                        value: null
+                    role:
+                        type: string
+                        value: null
+                value: null
+    - id: "153625"
+      type: message_create
+      title: 创建助手消息
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-创建消息.jpg
+      description: "用于创建消息"
+      position:
+        x: 2089.9824033391315
+        y: 590.3823335549228
+      parameters:
+        node_inputs:
+            - name: conversationName
+              input:
+                value:
+                    path: CONVERSATION_NAME
+                    ref_node: "100001"
+            - name: role
+              input:
+                type: string
+                value: "assistant"
+            - name: content
+              input:
+                value:
+                    path: output
+                    ref_node: "138401"
+        node_outputs:
+            isSuccess:
+                type: boolean
+                value: null
+            message:
+                type: object
+                properties:
+                    content:
+                        type: string
+                        value: null
+                    contentType:
+                        type: string
+                        value: null
+                    messageId:
+                        type: string
+                        value: null
+                    role:
+                        type: string
+                        value: null
+                value: null
+    - id: "107525"
+      type: ltm_write
+      title: 长期记忆写入
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-ltm_write.png
+      description: "写入长期记忆"
+      position:
+        x: 3095.525072504294
+        y: 577.3823335549228
+      parameters:
+        memoryInfoList:
+            - memoryInfoID: "7585031924532396095"
+        node_inputs:
+            - name: messageList
+              input:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        content:
+                            type: string
+                            value: null
+                        role:
+                            type: string
+                            value: null
+                    value: null
+                value:
+                    path: messageList
+                    ref_node: "124439"
+        node_outputs:
+            isSuccess:
+                type: boolean
+                value: null
+    - id: "124439"
+      type: message_list
+      title: 查询消息列表
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Conversation-List.jpeg
+      description: "用于查询消息列表"
+      position:
+        x: 2599.780105242345
+        y: 590.3823335549228
+      parameters:
+        node_inputs:
+            - name: conversationName
+              input:
+                value:
+                    path: CONVERSATION_NAME
+                    ref_node: "100001"
+        node_outputs:
+            firstId:
+                type: string
+                value: null
+            hasMore:
+                type: boolean
+                value: null
+            lastId:
+                type: string
+                value: null
+            messageList:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        content:
+                            type: string
+                            value: null
+                        contentType:
+                            type: string
+                            value: null
+                        messageId:
+                            type: string
+                            value: null
+                        role:
+                            type: string
+                            value: null
+                    value: null
+                value: null
+    - id: "152619"
+      type: ltm_read
+      title: 长期记忆检索
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-ltm_read.png
+      description: "长期记忆检索"
+      position:
+        x: 284
+        y: -163.7233476935558
+      parameters:
+        memoryInfoList:
+            - memoryInfoID: "7585031924532396095"
+        node_inputs:
+            - name: query
+              input:
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+            - name: limit
+              input:
+                type: integer
+                value: 20
+        node_outputs:
+            outputList:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        date:
+                            type: string
+                            value: null
+                        output:
+                            type: string
+                            value: null
+                    value: null
+                value: null
+    - id: "1447333"
+      type: plugin
+      title: Web信息检索
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Plugin-v2.jpg
+      description: "联网搜索，并返回结构化数据\n"
+      position:
+        x: 284
+        y: 326.8334799923226
+      parameters:
+        apiParam:
+            - name: apiID
+              input:
+                type: string
+                value: "7387323807385829402"
+            - name: apiName
+              input:
+                type: string
+                value: "search_url"
+            - name: pluginID
+              input:
+                type: string
+                value: "7380279400157265954"
+            - name: pluginName
+              input:
+                type: string
+                value: "联网问答（免费版）"
+            - name: pluginVersion
+              input:
+                type: string
+                value: ""
+            - name: tips
+              input:
+                type: string
+                value: ""
+            - name: outDocLink
+              input:
+                type: string
+                value: ""
+        node_inputs:
+            - name: query
+              input:
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+        node_outputs:
+            code:
+                type: float
+                value: null
+            data:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        has_image:
+                            type: boolean
+                            value: null
+                        image_url:
+                            type: string
+                            value: null
+                        logo_url:
+                            type: string
+                            value: null
+                        sitename:
+                            type: string
+                            value: null
+                        summary:
+                            type: string
+                            value: null
+                        title:
+                            type: string
+                            value: null
+                        url:
+                            type: string
+                            value: null
+                    value: null
+                value: null
+            log_id:
+                type: string
+                value: null
+            msg:
+                type: string
+                value: null
+        settingOnError:
+            processType: 1
+            retryTimes: 0
+            timeoutMs: 180000
+    - id: "1643883"
+      type: knowledge
+      title: 混合检索重排_原始输入
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-KnowledgeQuery-v2.jpg
+      description: "在选定的知识中,根据输入变量召回最匹配的信息,并以列表形式返回"
+      position:
+        x: 284
+        y: 161.869585463513
+      parameters:
+        datasetParam:
+            - name: datasetList
+              input:
+                type: list
+                items:
+                    type: string
+                    value: null
+                value:
+                    - "7584376227693395977"
+            - name: topK
+              input:
+                type: integer
+                value: "5"
+            - name: useRerank
+              input:
+                type: boolean
+                value: true
+            - name: useRewrite
+              input:
+                type: boolean
+                value: true
+            - name: isPersonalOnly
+              input:
+                type: boolean
+                value: true
+            - name: datasetType
+              input:
+                type: integer
+                value: "0"
+            - name: VolcanoInfoList
+              input:
+                type: list
+                items:
+                    type: object
+                    value: null
+                value: []
+            - name: minScore
+              input:
+                type: float
+                value: "0.5"
+            - name: strategy
+              input:
+                type: integer
+                value: "1"
+        node_inputs:
+            - name: Query
+              input:
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+            - name: enableChatHistory
+              input:
+                type: boolean
+                value: true
+            - name: chatHistoryRound
+              input:
+                type: float
+                value: 3
+        node_outputs:
+            outputList:
+                type: list
+                items:
+                    type: object
+                    properties:
+                        documentId:
+                            type: string
+                            value: null
+                        output:
+                            type: string
+                            value: null
+                    value: null
+                value: null
+edges:
+    - source_node: "138401"
+      target_node: "900001"
+    - source_node: "107525"
+      target_node: "900001"
+    - source_node: "1603596"
+      target_node: "178607"
+    - source_node: "152619"
+      target_node: "178607"
+    - source_node: "1447333"
+      target_node: "178607"
+    - source_node: "1643883"
+      target_node: "178607"
+    - source_node: "178607"
+      target_node: "138401"
+    - source_node: "1630310"
+      target_node: "1603596"
+    - source_node: "100001"
+      target_node: "1630310"
+    - source_node: "100001"
+      target_node: "183096"
+    - source_node: "1630310"
+      target_node: "152619"
+    - source_node: "1630310"
+      target_node: "1447333"
+    - source_node: "1630310"
+      target_node: "1643883"
+    - source_node: "138401"
+      target_node: "153625"
+    - source_node: "183096"
+      target_node: "153625"
+    - source_node: "153625"
+      target_node: "124439"
+    - source_node: "124439"
+      target_node: "107525"

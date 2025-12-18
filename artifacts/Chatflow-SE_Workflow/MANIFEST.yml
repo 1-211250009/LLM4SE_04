@@ -1,0 +1,11 @@
+type: Workflow
+version: 1.0.0
+main:
+    id: 7584719393977860150
+    name: SE_Workflow
+    desc: 通过检索软件工程领域知识库，回答软件工程问题。
+    icon: plugin_icon/chatflow-icon.png
+    version: ""
+    flowMode: 3
+    commitId: ""
+sub: []
